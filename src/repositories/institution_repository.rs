@@ -1,13 +1,18 @@
 use async_trait::async_trait;
 
-use crate::{errors::AppResult, repositories::{types::IdNameRow, Registry}};
+use crate::{errors::AppResult, repositories::{types::{IdNameRow, institutions::InstitutionStructureRow}, Registry}};
 
+#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait InstitutionRepository: Send + Sync {
     async fn find_options_by_competitions(
         &self,
         competition_ids: Option<Vec<i32>>
     ) -> AppResult<Vec<IdNameRow>>;
+    async fn find_structures_by_ids(
+        &self,
+        institution_ids: Vec<i32>
+    ) -> AppResult<Vec<InstitutionStructureRow>>;
 }
 
 #[async_trait]
@@ -34,7 +39,8 @@ impl InstitutionRepository for Registry {
                 ORDER BY i.name"
             )
             .bind(ids)
-            .fetch_all(&self.pool).await?
+            .fetch_all(&self.pool)
+            .await?
         } else {
             sqlx::query_as(
                 "SELECT
@@ -42,9 +48,24 @@ impl InstitutionRepository for Registry {
                 FROM institutions
                 ORDER BY name"
             )
-            .fetch_all(&self.pool).await?
+            .fetch_all(&self.pool)
+            .await?
         };
         
+        Ok(rows)
+    }
+
+    async fn find_structures_by_ids(
+        &self,
+        institution_ids: Vec<i32>
+    ) -> AppResult<Vec<InstitutionStructureRow>> {
+        let rows = sqlx::query_as(
+            ""
+        )
+        .bind(institution_ids)
+        .fetch_all(&self.pool)
+        .await?;
+
         Ok(rows)
     }
 }

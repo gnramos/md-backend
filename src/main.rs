@@ -14,13 +14,14 @@ async fn main() -> anyhow::Result<()> {
         })?;
 
     let pool = PgPoolOptions::new()
-        .connect(&db_url).await
+        .connect(&db_url)
+        .await
         .context("Failed to connect to DB.")?;
     
     sqlx::migrate!()
         .run(&pool)
         .await
-        .expect("Migrations failed");
+        .context("Migrations failed")?;
 
     let state = AppState::new(pool);
 

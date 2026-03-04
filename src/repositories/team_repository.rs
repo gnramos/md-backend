@@ -3,6 +3,7 @@ use sqlx::{Postgres, QueryBuilder};
 
 use crate::{errors::AppResult, repositories::{types::IdNameRow, Registry}};
 
+#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait TeamRepository: Send + Sync {
     async fn find_options_by_competitions_and_instructions(

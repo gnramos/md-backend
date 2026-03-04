@@ -2,10 +2,11 @@ use async_trait::async_trait;
 
 use crate::{errors::AppResult, repositories::{Registry, types::{IdNameRow, organizers::OrganizerStructureRow}}};
 
+#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait OrganizerRepository: Send + Sync {
     async fn find_options(&self) -> AppResult<Vec<IdNameRow>>;
-    async fn find_structure_by_organizer_ids(
+    async fn find_structures_by_ids(
         &self,
         organizer_ids: Vec<i32>
     ) -> AppResult<Vec<OrganizerStructureRow>>;
@@ -20,7 +21,7 @@ impl OrganizerRepository for Registry {
         Ok(rows)
     }
 
-    async fn find_structure_by_organizer_ids(
+    async fn find_structures_by_ids(
         &self,
         organizer_ids: Vec<i32>
     ) -> AppResult<Vec<OrganizerStructureRow>> {

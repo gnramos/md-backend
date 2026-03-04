@@ -7,10 +7,7 @@ pub async fn get_options(
     State(state): State<AppState>,
     Query(filter): Query<CompetitionOptionsQuery>
 ) -> impl IntoResponse {
-    services::competitions::get_option(
-        &state.repo,
-        filter.organizer_ids
-    )
+    services::competitions::get_option(&state.repo, filter.organizer_ids)
         .await
         .map(|options| Json(options))
 }
