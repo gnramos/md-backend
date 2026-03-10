@@ -1,8 +1,10 @@
-use crate::{dtos::filters::output::Filter, errors::AppResult, repositories::CompetitionRepository};
+use crate::{
+    dtos::filters::output::Filter, errors::AppResult, repositories::CompetitionRepository,
+};
 
 pub async fn get_option(
     repo: &dyn CompetitionRepository,
-    organizer_ids: Option<Vec<i32>>
+    organizer_ids: Option<Vec<i32>>,
 ) -> AppResult<Vec<Filter>> {
     let options = repo
         .find_options_by_organizers(organizer_ids)
@@ -28,14 +30,18 @@ mod tests {
             .with(mockall::predicate::eq(Some(vec![1, 2])))
             .returning(|_| {
                 Ok(vec![
-                    IdNameRow { id: 1, name: "ICPC Brazil".to_string() },
-                    IdNameRow { id: 2, name: "ICPC LatAm".to_string() },
+                    IdNameRow {
+                        id: 1,
+                        name: "ICPC Brazil".to_string(),
+                    },
+                    IdNameRow {
+                        id: 2,
+                        name: "ICPC LatAm".to_string(),
+                    },
                 ])
             });
 
-        let result = get_option(&repo, Some(vec![1, 2]))
-            .await
-            .unwrap();
+        let result = get_option(&repo, Some(vec![1, 2])).await.unwrap();
 
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].id, 1);

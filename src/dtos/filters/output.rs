@@ -12,7 +12,7 @@ impl From<IdNameRow> for Filter {
     fn from(row: IdNameRow) -> Self {
         Self {
             id: row.id,
-            name: row.name
+            name: row.name,
         }
     }
 }

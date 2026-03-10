@@ -1,10 +1,14 @@
-use axum::{Json, extract::{Query, State}, response::IntoResponse};
+use axum::{
+    Json,
+    extract::{Query, State},
+    response::IntoResponse,
+};
 
-use crate::{AppState, dtos::filters::input::CompetitionOptionsQuery, services};
+use crate::{AppState, dtos::organizers::input::OrganizerStructuresQuery, services};
 
 pub async fn get_structures(
     State(state): State<AppState>,
-    Query(filter): Query<CompetitionOptionsQuery>
+    Query(filter): Query<OrganizerStructuresQuery>,
 ) -> impl IntoResponse {
     services::organizers::get_structures(&state.repo, filter.organizer_ids.into_inner())
         .await

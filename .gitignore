@@ -1,2 +1,4 @@
 /target
 .env
+
+/src/services/competitions/temp_structure_tests.rs

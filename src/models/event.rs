@@ -1,5 +1,5 @@
-use serde::{Serialize, Deserialize};
 use chrono::NaiveDate;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Event {

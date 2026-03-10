@@ -12,14 +12,14 @@ enum CsvOrVec<T> {
 #[derive(Debug)]
 pub struct CsvOptVec<T>(Option<Vec<T>>);
 
-impl <'de, T> Deserialize<'de> for CsvOptVec<T>
+impl<'de, T> Deserialize<'de> for CsvOptVec<T>
 where
     T: Deserialize<'de> + FromStr,
-    T::Err: Display
+    T::Err: Display,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>
+        D: serde::Deserializer<'de>,
     {
         match CsvOrVec::deserialize(deserializer)? {
             CsvOrVec::Vec(vec) => Ok(CsvOptVec(Some(vec))),

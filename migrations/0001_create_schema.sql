@@ -70,8 +70,11 @@ CREATE TABLE institution (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
   short_name TEXT,
-  site TEXT
+  site TEXT,
+  main_location_id INT REFERENCES location(id)
 );
+
+CREATE INDEX idx_institution_main_location_id ON institution(main_location_id);
 
 CREATE TABLE institution_location (
   institution_id INT REFERENCES institution(id),
@@ -124,12 +127,14 @@ CREATE TABLE team_event (
   id SERIAL PRIMARY KEY,
   team_id INT NOT NULL REFERENCES team(id),
   event_id INT NOT NULL REFERENCES event(id),
+  campus_location_id INT REFERENCES location(id),
   rank INT,
   UNIQUE (team_id, event_id)
 );
 
 CREATE INDEX idx_team_event_team_id ON team_event(team_id);
 CREATE INDEX idx_team_event_event_id ON team_event(event_id);
+CREATE INDEX idx_team_event_campus_location_id ON team_event(campus_location_id);
 
 CREATE TABLE member (
   id SERIAL PRIMARY KEY,
@@ -155,3 +160,43 @@ CREATE TABLE submission (
 
 CREATE INDEX idx_submission_team_event_id ON submission(team_event_id);
 CREATE INDEX idx_submission_problem_id ON submission(problem_id);
+
+-- =========================
+-- FUNCTIONS
+-- =========================
+CREATE OR REPLACE FUNCTION get_location_tree(start_location_id INT)
+RETURNS TABLE (
+    id INT,
+    parent_id INT,
+    name TEXT,
+    type location_type,
+    depth INT
+)
+LANGUAGE sql
+AS $$
+WITH RECURSIVE location_tree AS (
+    -- anchor
+    SELECT
+        l.id,
+        l.parent_id,
+        l.name,
+        l.type,
+        1 AS depth
+    FROM location l
+    WHERE l.id = start_location_id
+
+    UNION ALL
+
+    -- recursive
+    SELECT
+        parent.id,
+        parent.parent_id,
+        parent.name,
+        parent.type,
+        lt.depth + 1
+    FROM location parent
+    JOIN location_tree lt
+        ON parent.id = lt.parent_id
+)
+SELECT * FROM location_tree;
+$$;

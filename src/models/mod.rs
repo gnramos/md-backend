@@ -1,13 +1,13 @@
-mod organizer;
+mod author;
 mod competition;
 mod event;
-mod location;
 mod institution;
-mod problem;
-mod author;
-mod team;
+mod location;
 mod member;
+mod organizer;
+mod problem;
 mod submission;
+mod team;
 
 pub use competition::Competition;
 pub use event::Event;
@@ -15,6 +15,6 @@ pub use institution::Institution;
 pub use location::Location;
 pub use member::{Member, TeamEventMember};
 pub use organizer::Organizer;
-pub use problem::{Problem, InputOutput};
+pub use problem::{InputOutput, Problem};
 pub use submission::Submission;
 pub use team::{Team, TeamEvent};

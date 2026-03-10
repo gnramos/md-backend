@@ -1,8 +1,6 @@
 use crate::{dtos::filters::output::Filter, errors::AppResult, repositories::OrganizerRepository};
 
-pub async fn get_options(
-    repo: &dyn OrganizerRepository
-) -> AppResult<Vec<Filter>> {
+pub async fn get_options(repo: &dyn OrganizerRepository) -> AppResult<Vec<Filter>> {
     let options = repo
         .find_options()
         .await?
@@ -23,14 +21,22 @@ mod tests {
     async fn get_options_returns_filters_from_repository_rows() {
         let mut repo = MockOrganizerRepository::new();
 
-        repo.expect_find_options()
-            .returning(|| {
-                Ok(vec![
-                    IdNameRow { id: 1, name: "ICPC".to_string() },
-                    IdNameRow { id: 2, name: "OBI".to_string() },
-                    IdNameRow { id: 3, name: "Maratona".to_string() },
-                ])
-            });
+        repo.expect_find_options().returning(|| {
+            Ok(vec![
+                IdNameRow {
+                    id: 1,
+                    name: "ICPC".to_string(),
+                },
+                IdNameRow {
+                    id: 2,
+                    name: "OBI".to_string(),
+                },
+                IdNameRow {
+                    id: 3,
+                    name: "Maratona".to_string(),
+                },
+            ])
+        });
 
         let result = get_options(&repo).await.unwrap();
 
@@ -47,8 +53,7 @@ mod tests {
     async fn get_options_returns_empty_when_no_organizers() {
         let mut repo = MockOrganizerRepository::new();
 
-        repo.expect_find_options()
-            .returning(|| Ok(vec![]));
+        repo.expect_find_options().returning(|| Ok(vec![]));
 
         let result = get_options(&repo).await.unwrap();
 

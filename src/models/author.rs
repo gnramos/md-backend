@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]

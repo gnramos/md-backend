@@ -1,14 +1,14 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use sqlx::Type;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type, PartialEq)]
 #[sqlx(type_name = "gender_category")]
 pub enum GenderCategory {
     Open,
     FemaleOnly,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type, PartialEq)]
 #[sqlx(type_name = "gender")]
 pub enum Gender {
     Male,
@@ -17,7 +17,7 @@ pub enum Gender {
     RatherNotAnswer,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type, PartialEq)]
 #[sqlx(type_name = "status")]
 pub enum Status {
     Accepted,
@@ -29,7 +29,7 @@ pub enum Status {
     RuntimeError,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type, PartialEq)]
 #[sqlx(type_name = "role")]
 pub enum Role {
     Contestant,
@@ -37,7 +37,7 @@ pub enum Role {
     Reserve,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type, PartialEq, Eq, PartialOrd, Ord)]
 #[sqlx(type_name = "location_type")]
 pub enum LocationType {
     Continent,

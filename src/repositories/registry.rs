@@ -2,7 +2,7 @@ use sqlx::PgPool;
 
 #[derive(Clone)]
 pub struct Registry {
-    pub(super) pool: PgPool
+    pub(super) pool: PgPool,
 }
 
 impl Registry {

@@ -1,13 +1,15 @@
 use serde::Serialize;
+use std::collections::HashMap;
 
 use crate::shared::types::GenderCategory;
 
+// ======================== Main DTOs ========================
 #[derive(Debug, Serialize)]
 pub struct OrganizerStructure {
     pub id: i32,
     pub name: String,
     pub website_url: String,
-    pub competitions: Vec<CompetitionSubStructure>
+    pub competitions: Vec<CompetitionSubStructure>,
 }
 
 #[derive(Debug, Serialize)]
@@ -16,29 +18,130 @@ pub struct CompetitionSubStructure {
     pub name: String,
     pub website_url: String,
     pub gender_category: GenderCategory,
-    pub events: Vec<EventSubStructure>
+    pub total_teams: i32,
+    pub total_participants: i32,
+    pub female_percentage: f32,
+    pub events: Vec<EventSubStructure>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct EventSubStructure {
     pub id: i32,
-    pub name: String
+    pub name: String,
+    pub total_teams: i32,
+    pub total_participants: i32,
+    pub female_percentage: f32,
 }
 
-impl OrganizerStructure {
-    pub fn new(id: i32, name: String, website_url: String) -> Self {
-        Self { id, name, website_url, competitions: Vec::new() }
+// ======================== Temporary Structs ========================
+#[derive(Debug)]
+pub struct TempOrganizerStructure {
+    pub id: i32,
+    pub name: String,
+    pub website_url: String,
+    pub competitions: HashMap<i32, TempCompetitionSubStructure>,
+}
+
+#[derive(Debug)]
+pub struct TempCompetitionSubStructure {
+    pub id: i32,
+    pub name: String,
+    pub website_url: String,
+    pub gender_category: GenderCategory,
+    pub total_teams: i32,
+    pub total_participants: i32,
+    pub female_percentage: f32,
+    pub events: HashMap<i32, EventSubStructure>,
+}
+
+// ======================== From trait ========================
+
+impl From<TempOrganizerStructure> for OrganizerStructure {
+    fn from(value: TempOrganizerStructure) -> Self {
+        Self {
+            id: value.id,
+            name: value.name,
+            website_url: value.website_url,
+            competitions: value
+                .competitions
+                .into_values()
+                .map(CompetitionSubStructure::from)
+                .collect(),
+        }
     }
 }
 
-impl CompetitionSubStructure {
-    pub fn new(id: i32, name: String, website_url: String, gender_category: GenderCategory, events: Vec<EventSubStructure>) -> Self {
-        Self { id, name, website_url, gender_category, events }
+impl From<TempCompetitionSubStructure> for CompetitionSubStructure {
+    fn from(value: TempCompetitionSubStructure) -> Self {
+        Self {
+            id: value.id,
+            name: value.name,
+            website_url: value.website_url,
+            gender_category: value.gender_category,
+            total_teams: value.total_teams,
+            total_participants: value.total_participants,
+            female_percentage: value.female_percentage,
+            events: value.events.into_values().collect(),
+        }
+    }
+}
+
+// ======================== new() constructors ========================
+
+impl TempOrganizerStructure {
+    pub fn new(
+        id: i32,
+        name: String,
+        website_url: String,
+        competitions: HashMap<i32, TempCompetitionSubStructure>,
+    ) -> Self {
+        Self {
+            id,
+            name,
+            website_url,
+            competitions,
+        }
+    }
+}
+
+impl TempCompetitionSubStructure {
+    pub fn new(
+        id: i32,
+        name: String,
+        website_url: String,
+        gender_category: GenderCategory,
+        total_teams: i32,
+        total_participants: i32,
+        female_participants: i32,
+        events: HashMap<i32, EventSubStructure>,
+    ) -> Self {
+        Self {
+            id,
+            name,
+            website_url,
+            gender_category,
+            total_teams,
+            total_participants,
+            female_percentage: female_participants as f32 / total_participants as f32,
+            events,
+        }
     }
 }
 
 impl EventSubStructure {
-    pub fn new(id: i32, name: String) -> Self {
-        Self { id, name }
+    pub fn new(
+        id: i32,
+        name: String,
+        total_teams: i32,
+        total_participants: i32,
+        female_participants: i32,
+    ) -> Self {
+        Self {
+            id,
+            name,
+            total_teams,
+            total_participants,
+            female_percentage: female_participants as f32 / total_participants as f32,
+        }
     }
 }
