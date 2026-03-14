@@ -21,7 +21,12 @@ pub trait OrganizerRepository: Send + Sync {
 #[async_trait]
 impl OrganizerRepository for Registry {
     async fn find_options(&self) -> AppResult<Vec<IdNameRow>> {
-        let rows = sqlx::query_as("SELECT id, name FROM organizer")
+        let rows = sqlx::query_as(
+                "SELECT
+                    id, name
+                FROM organizer
+                ORDER BY name"
+            )
             .fetch_all(&self.pool)
             .await?;
 
@@ -81,7 +86,7 @@ impl OrganizerRepository for Registry {
                     se.event_name,
                     se.event_level
             ),
-            latest_event_team_rows AS (
+            latest_year_event_team_rows AS (
                 SELECT
                     em.organizer_id,
                     em.organizer_name,
@@ -103,53 +108,45 @@ impl OrganizerRepository for Registry {
                     ) AS team_female_members
                 FROM event_metadata em
                 JOIN event_instance ei ON ei.event_id = em.event_id
-                    AND ei.date = em.event_date
+                    AND EXTRACT(YEAR FROM ei.date)::int = EXTRACT(YEAR FROM em.event_date)::int
                 JOIN team_event te ON te.event_instance_id = ei.id
                 JOIN team_event_member tem ON tem.team_event_id = te.id
                 JOIN member m ON m.id = tem.member_id
                 GROUP BY
-                    em.organizer_id,
-                    em.organizer_name,
-                    em.organizer_website_url,
-                    em.competition_id,
-                    em.competition_name,
-                    em.competition_website_url,
-                    em.competition_gender_category,
-                    em.event_id,
-                    em.event_name,
-                    em.event_level,
-                    em.event_date,
-                    em.event_years,
+                    em.organizer_id, em.organizer_name, em.organizer_website_url, em.competition_id,
+                    em.competition_name, em.competition_website_url, em.competition_gender_category, em.event_id,
+                    em.event_name, em.event_level,
+                    em.event_date, em.event_years,
                     te.team_id
             ),
             selected_organizer_rows AS (
                 SELECT
-                    letr.organizer_id,
-                    letr.organizer_name,
-                    letr.organizer_website_url,
-                    letr.competition_id,
-                    letr.competition_name,
-                    letr.competition_website_url,
-                    letr.competition_gender_category,
-                    letr.event_id,
-                    letr.event_name,
-                    letr.event_level,
-                    letr.event_date,
-                    letr.event_years
-                FROM latest_event_team_rows letr
+                    lyetr.organizer_id,
+                    lyetr.organizer_name,
+                    lyetr.organizer_website_url,
+                    lyetr.competition_id,
+                    lyetr.competition_name,
+                    lyetr.competition_website_url,
+                    lyetr.competition_gender_category,
+                    lyetr.event_id,
+                    lyetr.event_name,
+                    lyetr.event_level,
+                    lyetr.event_date,
+                    lyetr.event_years
+                FROM latest_year_event_team_rows lyetr
                 GROUP BY
-                    letr.organizer_id,
-                    letr.organizer_name,
-                    letr.organizer_website_url,
-                    letr.competition_id,
-                    letr.competition_name,
-                    letr.competition_website_url,
-                    letr.competition_gender_category,
-                    letr.event_id,
-                    letr.event_name,
-                    letr.event_level,
-                    letr.event_date,
-                    letr.event_years
+                    lyetr.organizer_id,
+                    lyetr.organizer_name,
+                    lyetr.organizer_website_url,
+                    lyetr.competition_id,
+                    lyetr.competition_name,
+                    lyetr.competition_website_url,
+                    lyetr.competition_gender_category,
+                    lyetr.event_id,
+                    lyetr.event_name,
+                    lyetr.event_level,
+                    lyetr.event_date,
+                    lyetr.event_years
             ),
             event_totals AS (
                 SELECT
@@ -157,7 +154,7 @@ impl OrganizerRepository for Registry {
                     COUNT(DISTINCT team_id) AS event_total_teams,
                     SUM(team_total_members) AS event_total_participants,
                     SUM(team_female_members) AS event_female_participants
-                FROM latest_event_team_rows
+                FROM latest_year_event_team_rows
                 GROUP BY event_id
             ),
             competition_totals AS (
@@ -166,7 +163,7 @@ impl OrganizerRepository for Registry {
                     COUNT(DISTINCT team_id) AS competition_total_teams,
                     SUM(team_total_members) AS competition_total_participants,
                     SUM(team_female_members) AS competition_female_participants
-                FROM latest_event_team_rows
+                FROM latest_year_event_team_rows
                 GROUP BY competition_id
             )
             SELECT

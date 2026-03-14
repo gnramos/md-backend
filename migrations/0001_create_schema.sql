@@ -147,7 +147,7 @@ CREATE TABLE team_event (
   team_id INT NOT NULL REFERENCES team(id),
   event_instance_id INT NOT NULL REFERENCES event_instance(id),
   campus_location_id INT REFERENCES location(id),
-  rank INT,
+  rank INT NOT NULL,
   UNIQUE (team_id, event_instance_id)
 );
 

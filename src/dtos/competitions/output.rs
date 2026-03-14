@@ -1,7 +1,6 @@
 use chrono::NaiveDate;
 use indexmap::IndexMap;
 use serde::Serialize;
-use std::collections::BTreeSet;
 
 use crate::shared::types::{GenderCategory, LocationType};
 
@@ -12,10 +11,11 @@ pub struct CompetitionStructure {
     pub name: String,
     pub website_url: Option<String>,
     pub gender_category: GenderCategory,
-    pub location_types: Vec<LocationType>,
+    pub total_institutions: u32,
     pub total_teams: u32,
     pub total_participants: u32,
     pub female_percentage: f32,
+    pub location_types: Vec<LocationType>,
     pub events: Vec<EventSubStructure>,
 }
 
@@ -26,10 +26,12 @@ pub struct EventSubStructure {
     pub level: Option<u32>,
     pub date: NaiveDate,
     pub location: String,
-    pub location_types: Vec<LocationType>,
+    pub years: Vec<u32>,
+    pub total_institutions: u32,
     pub total_teams: u32,
     pub total_participants: u32,
     pub female_percentage: f32,
+    pub location_types: Vec<LocationType>,
     pub teams: Vec<TeamSubStructure>,
 }
 
@@ -54,10 +56,11 @@ pub struct TempCompetitionStructure {
     pub name: String,
     pub website_url: Option<String>,
     pub gender_category: GenderCategory,
-    pub location_types: BTreeSet<LocationType>,
+    pub total_institutions: u32,
     pub total_teams: u32,
     pub total_participants: u32,
     pub female_percentage: f32,
+    pub location_types: Vec<LocationType>,
     pub events: IndexMap<i32, TempEventSubStructure>,
 }
 
@@ -68,25 +71,30 @@ pub struct TempEventSubStructure {
     pub level: Option<u32>,
     pub date: NaiveDate,
     pub location: String,
-    pub location_types: BTreeSet<LocationType>,
+    pub years: Vec<u32>,
+    pub total_institutions: u32,
     pub total_teams: u32,
     pub total_participants: u32,
     pub female_percentage: f32,
+    pub location_types: Vec<LocationType>,
     pub teams: IndexMap<i32, TeamSubStructure>,
 }
 
 // ======================== Conversion to final DTO ========================
 impl From<TempCompetitionStructure> for CompetitionStructure {
     fn from(value: TempCompetitionStructure) -> Self {
+        let mut location_types = value.location_types;
+        location_types.sort();
         Self {
             id: value.id,
             name: value.name,
             website_url: value.website_url,
             gender_category: value.gender_category,
-            location_types: value.location_types.into_iter().collect(),
+            total_institutions: value.total_institutions,
             total_teams: value.total_teams,
             total_participants: value.total_participants,
             female_percentage: value.female_percentage,
+            location_types,
             events: value
                 .events
                 .into_values()
@@ -98,17 +106,24 @@ impl From<TempCompetitionStructure> for CompetitionStructure {
 
 impl From<TempEventSubStructure> for EventSubStructure {
     fn from(value: TempEventSubStructure) -> Self {
+        let mut location_types = value.location_types;
+        location_types.sort();
         Self {
             id: value.id,
             name: value.name,
             level: value.level,
             date: value.date,
             location: value.location,
-            location_types: value.location_types.into_iter().collect(),
+            years: value.years,
+            total_institutions: value.total_institutions,
             total_teams: value.total_teams,
             total_participants: value.total_participants,
             female_percentage: value.female_percentage,
-            teams: value.teams.into_values().collect(),
+            location_types,
+            teams: value
+                .teams
+                .into_values()
+                .collect(),
         }
     }
 }
@@ -120,10 +135,11 @@ impl TempCompetitionStructure {
         name: String,
         website_url: Option<String>,
         gender_category: GenderCategory,
-        location_types: BTreeSet<LocationType>,
+        total_institutions: i32,
         total_teams: i32,
         total_participants: i32,
         female_participants: i32,
+        location_types: Vec<LocationType>,
         events: IndexMap<i32, TempEventSubStructure>,
     ) -> Self {
         Self {
@@ -131,10 +147,11 @@ impl TempCompetitionStructure {
             name,
             website_url,
             gender_category,
-            location_types,
+            total_institutions: total_institutions as u32,
             total_teams: total_teams as u32,
             total_participants: total_participants as u32,
             female_percentage: female_participants as f32 / total_participants as f32,
+            location_types,
             events,
         }
     }
@@ -147,10 +164,12 @@ impl TempEventSubStructure {
         level: Option<i32>,
         date: NaiveDate,
         location: String,
-        location_types: BTreeSet<LocationType>,
+        years: Vec<i32>,
+        total_institutions: i32,
         total_teams: i32,
         total_participants: i32,
         female_participants: i32,
+        location_types: Vec<LocationType>,
         teams: IndexMap<i32, TeamSubStructure>,
     ) -> Self {
         Self {
@@ -159,10 +178,12 @@ impl TempEventSubStructure {
             level: level.map(|l| l as u32),
             date,
             location,
-            location_types,
+            years: years.into_iter().map(|y| y as u32).collect(),
+            total_institutions: total_institutions as u32,
             total_teams: total_teams as u32,
             total_participants: total_participants as u32,
             female_percentage: female_participants as f32 / total_participants as f32,
+            location_types,
             teams,
         }
     }
