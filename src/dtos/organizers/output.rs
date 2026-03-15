@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use indexmap::IndexMap;
 use serde::Serialize;
 
-use crate::shared::types::GenderCategory;
+use crate::shared::types::{GenderCategory, LocationType};
 
 // ======================== Response DTOs ========================
 #[derive(Debug, Serialize)]
@@ -19,9 +19,12 @@ pub struct CompetitionSubStructure {
     pub name: String,
     pub website_url: Option<String>,
     pub gender_category: GenderCategory,
+    pub years: Vec<u32>,
+    pub total_institutions: u32,
     pub total_teams: u32,
     pub total_participants: u32,
     pub female_percentage: f32,
+    pub location_types: Vec<LocationType>,
     pub events: Vec<EventSubStructure>,
 }
 
@@ -31,10 +34,11 @@ pub struct EventSubStructure {
     pub name: String,
     pub level: Option<u32>,
     pub date: NaiveDate,
+    pub total_institutions: u32,
     pub total_teams: u32,
     pub total_participants: u32,
     pub female_percentage: f32,
-    pub years: Vec<u32>,
+    pub location_types: Vec<LocationType>,
 }
 
 // ======================== Intermediate structures ========================
@@ -54,9 +58,12 @@ pub struct TempCompetitionSubStructure {
     pub name: String,
     pub website_url: Option<String>,
     pub gender_category: GenderCategory,
+    pub years: Vec<u32>,
+    pub total_institutions: u32,
     pub total_teams: i32,
     pub total_participants: i32,
     pub female_percentage: f32,
+    pub location_types: Vec<LocationType>,
     pub events: IndexMap<i32, EventSubStructure>,
 }
 
@@ -78,14 +85,19 @@ impl From<TempOrganizerStructure> for OrganizerStructure {
 
 impl From<TempCompetitionSubStructure> for CompetitionSubStructure {
     fn from(value: TempCompetitionSubStructure) -> Self {
+        let mut location_types = value.location_types;
+        location_types.sort();
         Self {
             id: value.id,
             name: value.name,
             website_url: value.website_url,
             gender_category: value.gender_category,
+            years: value.years,
+            total_institutions: value.total_institutions,
             total_teams: value.total_teams as u32,
             total_participants: value.total_participants as u32,
             female_percentage: value.female_percentage,
+            location_types,
             events: value.events.into_values().collect(),
         }
     }
@@ -114,9 +126,12 @@ impl TempCompetitionSubStructure {
         name: String,
         website_url: Option<String>,
         gender_category: GenderCategory,
+        years: Vec<i32>,
+        total_institutions: i32,
         total_teams: i32,
         total_participants: i32,
         female_participants: i32,
+        location_types: Vec<LocationType>,
         events: IndexMap<i32, EventSubStructure>,
     ) -> Self {
         Self {
@@ -124,9 +139,12 @@ impl TempCompetitionSubStructure {
             name,
             website_url,
             gender_category,
+            years: years.into_iter().map(|y| y as u32).collect(),
+            total_institutions: total_institutions as u32,
             total_teams,
             total_participants,
             female_percentage: female_participants as f32 / total_participants as f32,
+            location_types,
             events,
         }
     }
@@ -138,20 +156,24 @@ impl EventSubStructure {
         name: String,
         level: Option<i32>,
         date: NaiveDate,
+        total_institutions: i32,
         total_teams: i32,
         total_participants: i32,
         female_participants: i32,
-        years: Vec<i32>,
+        location_types: Vec<LocationType>,
     ) -> Self {
+        let mut location_types = location_types;
+        location_types.sort();
         Self {
             id,
             name,
             level: level.map(|l| l as u32),
             date,
+            total_institutions: total_institutions as u32,
             total_teams: total_teams as u32,
             total_participants: total_participants as u32,
             female_percentage: female_participants as f32 / total_participants as f32,
-            years: years.into_iter().map(|y| y as u32).collect(),
+            location_types,
         }
     }
 }

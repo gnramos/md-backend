@@ -30,11 +30,11 @@ impl EventRepository for Registry {
                 lt.id AS location_id,
                 lt.name AS location_name,
 
-                COUNT(DISTINCT i.id) AS total_institutions,
-                COUNT(DISTINCT t.id) AS total_teams,
+                COUNT(DISTINCT i.id)::int4 AS total_institutions,
+                COUNT(DISTINCT t.id)::int4 AS total_teams,
 
-                SUM(p.total_participants) AS total_participants,
-                SUM(p.female_participants) AS female_participants
+                SUM(p.total_participants)::int4 AS total_participants,
+                SUM(p.female_participants)::int4 AS female_participants
 
             FROM team_event te
             JOIN team t ON t.id = te.team_id
@@ -46,8 +46,8 @@ impl EventRepository for Registry {
             JOIN (
                 SELECT
                     tem.team_event_id,
-                    COUNT(*) FILTER (WHERE tem.role = 'Contestant') AS total_participants,
-                    COUNT(*) FILTER (
+                    COUNT(*)::int4 FILTER (WHERE tem.role = 'Contestant') AS total_participants,
+                    COUNT(*)::int4 FILTER (
                         WHERE tem.role = 'Contestant'
                         AND m.gender = 'Female'
                     ) AS female_participants

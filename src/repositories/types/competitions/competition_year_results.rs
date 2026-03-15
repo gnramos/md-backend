@@ -1,15 +1,10 @@
 use chrono::NaiveDate;
 use sqlx::prelude::FromRow;
 
-use crate::shared::types::{GenderCategory, LocationType};
+use crate::shared::types::LocationType;
 
 #[derive(FromRow)]
-pub struct CompetitionStructureRow {
-    pub competition_id: i32,
-    pub competition_name: String,
-    pub competition_website_url: Option<String>,
-    pub competition_gender_category: GenderCategory,
-    pub competition_years: Vec<i32>,
+pub struct CompetitionYearResultRow {
     pub competition_total_institutions: i32,
     pub competition_total_teams: i32,
     pub competition_total_participants: i32,

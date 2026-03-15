@@ -63,10 +63,10 @@ impl InstitutionRepository for Registry {
         institution_ids: Vec<i32>,
     ) -> AppResult<Vec<InstitutionStructureRow>> {
         let rows = sqlx::query_as(
-            "WITH latest_event_years AS (
+            "WITH competition_latest_year AS (
                 SELECT
                     e.competition_id,
-                    EXTRACT(YEAR FROM MAX(ei.date))::int AS latest_year
+                    MAX(EXTRACT(YEAR FROM ei.date))::int AS latest_year
                 FROM event e
                 JOIN event_instance ei ON ei.event_id = e.id
                 GROUP BY e.competition_id
@@ -74,8 +74,8 @@ impl InstitutionRepository for Registry {
             team_event_stats AS (
                 SELECT
                     tem.team_event_id,
-                    COUNT(*) FILTER (WHERE tem.role = 'Contestant') AS team_total_members,
-                    COUNT(*) FILTER (
+                    COUNT(*)::int4 FILTER (WHERE tem.role = 'Contestant') AS team_total_members,
+                    COUNT(*)::int4 FILTER (
                         WHERE tem.role = 'Contestant'
                         AND m.gender = 'Female'
                     ) AS team_female_members
@@ -100,10 +100,10 @@ impl InstitutionRepository for Registry {
                     stats.team_total_members,
                     stats.team_female_members
                 FROM competition c
-                JOIN latest_event_years ley ON ley.competition_id = c.id
+                JOIN competition_latest_year cly ON cly.competition_id = c.id
                 JOIN event e ON e.competition_id = c.id
                 JOIN event_instance ei ON ei.event_id = e.id
-                    AND EXTRACT(YEAR FROM ei.date)::int = ley.latest_year
+                    AND EXTRACT(YEAR FROM ei.date)::int = cly.latest_year
                 JOIN team_event te ON te.event_instance_id = ei.id
                 JOIN team t ON t.id = te.team_id
                 JOIN institution i ON i.id = t.institution_id
@@ -117,25 +117,25 @@ impl InstitutionRepository for Registry {
             institution_totals AS (
                 SELECT
                     institution_id,
-                    COUNT(DISTINCT team_id) AS institution_total_teams,
-                    SUM(team_total_members) AS institution_total_contestants,
-                    SUM(team_female_members) AS institution_female_contestants
+                    COUNT(DISTINCT team_id)::int4 AS institution_total_teams,
+                    SUM(team_total_members)::int4 AS institution_total_contestants,
+                    SUM(team_female_members)::int4 AS institution_female_contestants
                 FROM selected_institution_rows
                 GROUP BY institution_id
             ),
             competition_totals AS (
                 SELECT
                     competition_id,
-                    COUNT(DISTINCT team_id) AS competition_total_teams,
-                    SUM(team_total_members) AS competition_total_participants
+                    COUNT(DISTINCT team_id)::int4 AS competition_total_teams,
+                    SUM(team_total_members)::int4 AS competition_total_participants
                 FROM latest_year_team_events
                 GROUP BY competition_id
             ),
             event_totals AS (
                 SELECT
                     event_id,
-                    COUNT(DISTINCT team_id) AS event_total_teams,
-                    SUM(team_total_members) AS event_total_participants
+                    COUNT(DISTINCT team_id)::int4 AS event_total_teams,
+                    SUM(team_total_members)::int4 AS event_total_participants
                 FROM latest_year_team_events
                 GROUP BY event_id
             )
