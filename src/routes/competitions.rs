@@ -13,12 +13,8 @@ pub fn router() -> Router<AppState> {
             get(handlers::competitions::get_structures),
         )
         .route(
-            "/competitions/{id}/structure",
-            get(handlers::competitions::get_structure_by_year),
-        )
-        .route(
             "/competitions/{id}/results",
-            get(handlers::competitions::get_results_by_year),
+            get(handlers::competitions::get_structure_by_year),
         )
         .route(
             "/competitions/{id}/stats",
