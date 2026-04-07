@@ -4,14 +4,14 @@ use axum::{
     response::IntoResponse,
 };
 
-use crate::{AppState, dtos::competitions::input::CompetitionByYearQuery, services};
+use crate::{AppState, dtos::{competitions::input::CompetitionByYearQuery, filters::input::IdPath}, services};
 
 pub async fn get_stats_by_year(
     State(state): State<AppState>,
-    Path(id): Path<i32>,
+    Path(path): Path<IdPath>,
     Query(query): Query<CompetitionByYearQuery>,
 ) -> impl IntoResponse {
-    services::competitions::get_stats_by_year(&state.repo, id, query.year)
+    services::competitions::get_stats_by_year(&state.repo, path.id, query.year)
         .await
         .map(|stats| Json(stats))
 }

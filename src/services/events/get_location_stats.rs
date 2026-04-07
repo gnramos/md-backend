@@ -17,7 +17,7 @@ pub async fn get_location_stats(
         year.ok_or_else(|| AppError::BadRequest("You need to specify a year.".to_string()))?;
 
     let stats = repo
-        .find_location_stats_by_event(event_id, location_type, year)
+        .find_location_stats(event_id, location_type, year)
         .await?
         .into_iter()
         .map(EventLocationStats::from)
@@ -58,7 +58,7 @@ mod tests {
     #[tokio::test]
     async fn get_location_stats_maps_repository_rows() {
         let mut repo = MockEventRepository::new();
-        repo.expect_find_location_stats_by_event()
+        repo.expect_find_location_stats()
             .with(
                 mockall::predicate::eq(20),
                 mockall::predicate::eq(LocationType::Country),
@@ -87,7 +87,7 @@ mod tests {
     #[tokio::test]
     async fn get_location_stats_returns_empty_when_repository_returns_empty() {
         let mut repo = MockEventRepository::new();
-        repo.expect_find_location_stats_by_event()
+        repo.expect_find_location_stats()
             .returning(|_, _, _| Ok(vec![]));
 
         let result = get_location_stats(&repo, 20, Some(LocationType::Country), Some(2024))
@@ -100,7 +100,7 @@ mod tests {
     #[tokio::test]
     async fn get_location_stats_propagates_repository_error() {
         let mut repo = MockEventRepository::new();
-        repo.expect_find_location_stats_by_event()
+        repo.expect_find_location_stats()
             .returning(|_, _, _| Err(AppError::BadRequest("repo fail".to_string())));
 
         let result = get_location_stats(&repo, 20, Some(LocationType::Country), Some(2024)).await;
