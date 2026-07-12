@@ -20,8 +20,7 @@ use serde::{Deserialize, de};
 
 /// Formatos aceitos pelo desserializador de lista flexível.
 ///
-/// Permite que uma query seja enviada tanto como string CSV quanto como vetor
-/// nativo desserializado pelo `serde`.
+/// Permite que uma query seja enviada tanto como string CSV quanto como vetor nativo desserializado pelo `serde`.
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum CsvOrVec<T> {

@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
 # e compila um main.rs dummy, aproveitando o cache de layers do Docker
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir src && echo "fn main() {}" > src/main.rs
+RUN mkdir tests && echo "fn main() {}" > tests/cucumber.rs
 RUN cargo build --release
 RUN rm -f target/release/deps/backend*
 

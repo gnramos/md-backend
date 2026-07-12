@@ -7,7 +7,7 @@
 //! Declara os módulos internos da aplicação, expõe as rotas públicas e reexporta o estado compartilhado.
 //!
 //! ## Submódulos
-//! - `controllers`: organiza uma parte especializada deste escopo.
+//! - `handlers`: organiza uma parte especializada deste escopo.
 //! - `dtos`: organiza uma parte especializada deste escopo.
 //! - `errors`: organiza uma parte especializada deste escopo.
 //! - `repositories`: organiza uma parte especializada deste escopo.
@@ -22,9 +22,9 @@
 //! ## Tipos
 //! Este módulo não define tipos novos; ele reutiliza contratos declarados em outros arquivos.
 //!
-mod controllers;
 mod dtos;
 mod errors;
+mod handlers;
 mod repositories;
 mod services;
 mod shared;

@@ -17,7 +17,7 @@ O projeto é, conceitualmente, um backend de leitura e agregação de dados.
 
 Ele não segue o estilo clássico de MVC com um `Model` monolítico no padrão Active Record. Em vez disso, a arquitetura está mais próxima de:
 
-- `Routes + Controllers`
+- `Routes + Handlers`
 - `Service Layer`
 - `Repository Layer`
 - `DTOs`
@@ -41,7 +41,7 @@ Em uma aplicação HTML tradicional, a `View` costuma ser template. Em uma API J
 
 ### O que significa Service Layer aqui
 
-A `Service Layer` é uma camada intermediária entre controller e modelo/persistência. Ela existe para concentrar:
+A `Service Layer` é uma camada intermediária entre a borda HTTP, que cumpre o papel de `Controller`, e o modelo/persistência. Ela existe para concentrar:
 
 - casos de uso
 - validação de entrada da aplicação
@@ -50,7 +50,7 @@ A `Service Layer` é uma camada intermediária entre controller e modelo/persist
 
 Em arquiteturas com Service Layer, a ideia é evitar dois extremos ruins:
 
-- controllers “gordos”, com regra demais
+- handlers “gordos”, com regra demais
 - models “gordos”, misturando persistência, regra de negócio e formatação de resposta
 
 ### Mapa de equivalência deste projeto
@@ -59,11 +59,11 @@ A equivalência mais útil é esta:
 
 | Conceito | Neste projeto | Observação |
 | --- | --- | --- |
-| `Controller` | `controllers/` | Recebe `Path`, `Query`, `State` e delega |
+| `Controller` | `handlers/` | Handlers Axum que cumprem o papel de `Controller`: recebem `Path`, `Query`, `State` e delegam |
 | `View` | `dtos/*/responses` + serialização JSON do Axum | Em API, a “view” é o payload JSON |
 | `Model` | `repositories/`, `repositories/types/`, `shared/types` e parte da lógica de domínio usada pelos `services` | O “model” não está concentrado em uma única pasta |
 | `Service Layer` | `services/` | Camada explícita de caso de uso |
-| Infra de entrada HTTP | `routes/` | Faz o wiring entre path e controller |
+| Infra de entrada HTTP | `routes/` | Faz o wiring entre path e handler |
 
 ### O que é “Model” neste backend
 
@@ -97,7 +97,7 @@ Por isso, ao pensar em MVC aqui, vale usar a expressão **View Model** ou **Resp
 Se você quiser guardar um único mapa mental, use este:
 
 ```text
-Route -> Controller -> Service -> Repository -> Banco
+Route -> Handler (Controller) -> Service -> Repository -> Banco
                          |
                          -> Response DTO -> JSON
 ```
@@ -180,7 +180,7 @@ CARGO_TARGET_DIR=/tmp/backend-target cargo test
 
 ```text
 src/
-  controllers/
+  handlers/
   dtos/
   repositories/
   routes/
@@ -198,7 +198,7 @@ README.md
 ### O papel de cada pasta
 
 - `routes/`: registra os endpoints HTTP por domínio
-- `controllers/`: extrai `Path`, `Query` e `State`, chama o service e devolve resposta HTTP
+- `handlers/`: extrai `Path`, `Query` e `State`, chama o service e devolve resposta HTTP; na lente MVC, cumpre o papel de `Controller`
 - `services/`: valida entrada, orquestra chamadas aos repositórios e transforma dados
 - `repositories/`: contratos e implementação de acesso a dados
 - `repositories/types/`: tipos de linha retornados pelas queries SQL
@@ -213,7 +213,7 @@ O fluxo principal do projeto é:
 ```text
 HTTP Request
   -> route
-  -> controller
+  -> handler
   -> service
   -> repository trait
   -> SQL query
@@ -239,19 +239,19 @@ HTTP Request
 Uma requisição para buscar estruturas de competições segue esta lógica:
 
 1. a rota registra o endpoint em `routes/competitions.rs`
-2. o controller extrai `competition_ids` da query string
+2. o handler extrai `competition_ids` da query string
 3. o service valida que os IDs existem
 4. o service chama `repo.find_structures_by_ids(...)`
 5. o repository executa uma query SQL grande e denormalizada
 6. a query retorna várias linhas “achatadas”
 7. o service reagrupa essas linhas em competições, eventos e times
-8. o controller devolve `Json(Vec<CompetitionStructure>)`
+8. o handler devolve `Json(Vec<CompetitionStructure>)`
 
 ## Camada por Camada
 
 ### 1. Routes
 
-**Na lente MVC + Service Layer:** esta camada fica um passo antes do `Controller`. Ela é infraestrutura HTTP, não regra de negócio.
+**Na lente MVC + Service Layer:** esta camada fica um passo antes do handler que cumpre o papel de `Controller`. Ela é infraestrutura HTTP, não regra de negócio.
 
 As rotas apenas organizam os endpoints por domínio.
 
@@ -264,18 +264,18 @@ Exemplo:
 Responsabilidade desta camada:
 
 - declarar paths
-- ligar path -> controller
+- ligar path -> handler
 - não conter regra de negócio
 
 A agregação final acontece em `routes::create_router()`, que faz o merge das routes criadas em cada submódulo num objeto `axum::Router`. Na `main`, os endpoints declarados aqui são associados ao `TcpListener` pelo `axum::serve()`.
 
-### 2. Controllers
+### 2. Handlers
 
-**Na lente MVC + Service Layer:** esta é a camada `Controller` propriamente dita.
+**Na lente MVC + Service Layer:** esta camada cumpre o papel de `Controller`.
 
-Os controllers são deliberadamente finos.
+Os handlers são deliberadamente finos.
 
-Exemplo simplificado de um controller:
+Exemplo simplificado de um handler:
 
 ```rust
 pub async fn get_structures(
@@ -284,7 +284,7 @@ pub async fn get_structures(
 ) -> impl IntoResponse {
     services::competitions::get_structures(&state.repo, filter.competition_ids.into_inner())
         .await
-        .map(|structures| Json(structures))
+        .map(Json)
 }
 ```
 
@@ -295,7 +295,7 @@ Responsabilidade desta camada:
 - converter o resultado em `Json(...)`
 - deixar o Axum transformar `AppError` em resposta HTTP
 
-O controller **não deveria**:
+O handler **não deveria**:
 
 - montar SQL
 - fazer agrupamento de dados
@@ -319,7 +319,7 @@ Exemplos de responsabilidades típicas:
 - transformar rows de banco em DTOs de resposta
 - reagrupar dados achatados em estruturas hierárquicas
 
-Em um MVC sem Service Layer, parte dessa lógica poderia acabar em controllers ou models. Aqui ela fica intencionalmente isolada em `services/`.
+Em um MVC sem Service Layer, parte dessa lógica poderia acabar em handlers ou models. Aqui ela fica intencionalmente isolada em `services/`.
 
 ### 4. Repositories
 
@@ -414,7 +414,7 @@ em vez de exigir arrays JSON ou múltiplos parâmetros repetidos.
 
 ### 8. Errors
 
-**Na lente MVC + Service Layer:** esta é uma peça transversal. Ela atravessa controller, service e repository, mas o mapeamento final para HTTP acontece na borda.
+**Na lente MVC + Service Layer:** esta é uma peça transversal. Ela atravessa handler, service e repository, mas o mapeamento final para HTTP acontece na borda.
 
 `errors.rs` define:
 
@@ -654,9 +654,9 @@ Assim, o service pode ser testado isoladamente.
 
 ## Convenções de Implementação
 
-### Controllers finos
+### Handlers finos
 
-Se um controller começar a validar regra, agregar dados ou decidir estrutura de domínio, provavelmente a lógica está na camada errada.
+Se um handler começar a validar regra, agregar dados ou decidir estrutura de domínio, provavelmente a lógica está na camada errada.
 
 ### Services como orquestradores
 
@@ -673,7 +673,7 @@ isso deve morar em `services/`.
 
 Se algo precisa de banco, o lugar certo é `repositories/`.
 
-Não coloque SQL em controller, DTO ou service.
+Não coloque SQL em handler, DTO ou service.
 
 ### DTO de resposta não é row de banco
 
@@ -695,7 +695,7 @@ Fluxo recomendado para adicionar um novo endpoint/caso de uso:
 
 1. definir o contrato HTTP em `dtos/<dominio>/requests` e/ou `responses`
 2. adicionar a rota em `routes/<dominio>.rs`
-3. criar o controller em `controllers/<dominio>/...`
+3. criar o handler em `handlers/<dominio>.rs`
 4. implementar o caso de uso em `services/<dominio>/...`
 5. declarar o método necessário no trait de repositório do domínio
 6. criar o row type em `repositories/types/...` se necessário
@@ -706,7 +706,7 @@ Fluxo recomendado para adicionar um novo endpoint/caso de uso:
 
 Se você não sabe onde colocar algo, faça a seguinte pergunta:
 
-- isso é HTTP? -> `controller` ou `dto`
+- isso é HTTP? -> `handler` ou `dto`
 - isso é regra de aplicação? -> `service`
 - isso é SQL/banco? -> `repository`
 - isso é formato cru de query? -> `repositories/types`
@@ -718,7 +718,7 @@ Se você não sabe onde colocar algo, faça a seguinte pergunta:
 
 - SQL explícito e fácil de otimizar
 - services testáveis sem banco
-- controllers simples
+- handlers simples
 - separação clara entre contrato HTTP e projeção SQL
 - boa adequação para endpoints analíticos
 - leitura arquitetural limpa para quem pensa em `MVC + Service Layer`
@@ -734,7 +734,7 @@ Se você não sabe onde colocar algo, faça a seguinte pergunta:
 
 Algumas melhorias naturais para o futuro:
 
-- adicionar testes de integração para controller + banco
+- adicionar testes de integração para handler + banco
 - revisar padronização de mensagens de erro
 - adicionar observabilidade estruturada (logs, tracing, métricas)
 - revisar endpoints e documentação pública da API separadamente deste README
@@ -746,7 +746,7 @@ Algumas melhorias naturais para o futuro:
 Se você lembrar de apenas uma coisa, lembre desta:
 
 - `routes` fazem o wiring HTTP
-- `controllers` fazem o papel de `Controller`
+- `handlers` fazem o papel de `Controller`
 - `services` são a `Service Layer`
 - `repositories` e `repositories/types` representam a parte persistente do `Model`
 - `dtos/*/responses` são a `View` da API

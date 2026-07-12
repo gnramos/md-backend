@@ -14,7 +14,7 @@
 //!
 use axum::{Router, routing::get};
 
-use crate::{AppState, controllers};
+use crate::{AppState, handlers};
 
 /// Cria o roteador do domínio de eventos.
 ///
@@ -27,10 +27,10 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route(
             "/events/{id}/location_stats",
-            get(controllers::events::get_location_stats),
+            get(handlers::events::get_location_stats),
         )
         .route(
             "/events/{id}/stats",
-            get(controllers::events::get_stats_by_year),
+            get(handlers::events::get_stats_by_year),
         )
 }

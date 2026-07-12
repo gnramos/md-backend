@@ -37,7 +37,7 @@ use crate::{
 /// # Erros
 /// Propaga erros emitidos pelo `sqlx` durante construção, bind ou execução da
 /// query.
-pub(super) async fn find_options_by_competitions_and_instructions(
+pub(super) async fn find_options_by_competitions_and_institutions(
     repo: &Registry,
     competition_ids: Option<Vec<i32>>,
     institution_ids: Option<Vec<i32>>,

@@ -44,11 +44,9 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("Migrations failed")?;
 
-    let state = AppState::new(pool);
-
     axum::serve(
         tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap(),
-        routes::create_router().with_state(state),
+        routes::create_router().with_state(AppState::new(pool)),
     )
     .await?;
 

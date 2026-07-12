@@ -14,7 +14,7 @@
 //!
 use axum::{Router, routing::get};
 
-use crate::{AppState, controllers};
+use crate::{AppState, handlers};
 
 /// Cria o roteador do domínio de times.
 ///
@@ -26,10 +26,10 @@ use crate::{AppState, controllers};
 /// Cada rota delega para handlers em `controllers::teams`.
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/teams/options", get(controllers::teams::get_options))
-        .route("/teams/structures", get(controllers::teams::get_structures))
+        .route("/teams/options", get(handlers::teams::get_options))
+        .route("/teams/structures", get(handlers::teams::get_structures))
         .route(
             "/teams/{team_id}/competitions/{competition_id}",
-            get(controllers::teams::get_structure_by_year),
+            get(handlers::teams::get_structure_by_year),
         )
 }

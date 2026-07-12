@@ -1,17 +1,19 @@
-//! # `backend::controllers::events::get_location_stats`
+//! # `backend::controllers::events`
 //!
 //! ## Responsabilidade
-//! Implementa handlers HTTP do domínio `events`.
+//! Agrupa os controllers por domínio da API.
 //!
 //! ## Lógica de Implementação
-//! Extrai parâmetros (`Path`, `Query` e `State`), delega ao service correspondente e transforma o resultado em `Json`/`IntoResponse`.
+//! Expõe handlers HTTP pequenos e orientados a caso de uso.
 //!
 //! ## Funções
 //! - `get_location_stats`: Handler HTTP que extrai dados da requisição, delega ao service e retorna payload serializável.
+//! - `get_stats_by_year`: Handler HTTP que extrai dados da requisição, delega ao service e retorna payload serializável.
 //!
 //! ## Tipos
 //! Este módulo não define tipos novos; ele reutiliza contratos declarados em outros arquivos.
 //!
+
 use axum::{
     Json,
     extract::{Path, Query, State},
@@ -20,7 +22,7 @@ use axum::{
 
 use crate::{
     AppState,
-    dtos::common::requests::{IdPath, LocationYearQuery},
+    dtos::common::requests::{IdPath, LocationYearQuery, YearQuery},
     services,
 };
 
@@ -43,6 +45,28 @@ pub async fn get_location_stats(
     Query(query): Query<LocationYearQuery>,
 ) -> impl IntoResponse {
     services::events::get_location_stats(&state.repo, path.id, query.location_type, query.year)
+        .await
+        .map(Json)
+}
+
+/// Retorna estatísticas anuais consolidadas de um evento.
+///
+/// Extrai o ID do evento do path e o ano da query string, delegando a
+/// validação ao service de eventos.
+///
+/// # Parâmetros
+/// - `state`: estado compartilhado da aplicação, contendo o registry.
+/// - `path`: path com o identificador do evento.
+/// - `query`: query com o ano de referência.
+///
+/// # Retorno
+/// Resposta JSON com totais anuais ou erro convertido por `IntoResponse`.
+pub async fn get_stats_by_year(
+    State(state): State<AppState>,
+    Path(path): Path<IdPath>,
+    Query(query): Query<YearQuery>,
+) -> impl IntoResponse {
+    services::events::get_stats_by_year(&state.repo, path.id, query.year)
         .await
         .map(Json)
 }

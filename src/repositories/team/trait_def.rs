@@ -45,7 +45,7 @@ pub trait TeamRepository: Send + Sync {
     ///
     /// # Erros
     /// Propaga falhas de acesso ao banco de dados.
-    async fn find_options_by_competitions_and_instructions(
+    async fn find_options_by_competitions_and_institutions(
         &self,
         competition_ids: Option<Vec<i32>>,
         institution_ids: Option<Vec<i32>>,
@@ -71,16 +71,16 @@ pub trait TeamRepository: Send + Sync {
 
 #[async_trait]
 impl TeamRepository for Registry {
-    /// Implementa [`TeamRepository::find_options_by_competitions_and_instructions`].
+    /// Implementa [`TeamRepository::find_options_by_competitions_and_institutions`].
     ///
     /// Delega a execução SQL dinâmica para
-    /// [`options::find_options_by_competitions_and_instructions`].
-    async fn find_options_by_competitions_and_instructions(
+    /// [`options::find_options_by_competitions_and_institutions`].
+    async fn find_options_by_competitions_and_institutions(
         &self,
         competition_ids: Option<Vec<i32>>,
         institution_ids: Option<Vec<i32>>,
     ) -> AppResult<Vec<IdNameRow>> {
-        options::find_options_by_competitions_and_instructions(
+        options::find_options_by_competitions_and_institutions(
             self,
             competition_ids,
             institution_ids,

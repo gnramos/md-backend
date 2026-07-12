@@ -14,7 +14,7 @@
 //!
 use axum::{Router, routing::get};
 
-use crate::{AppState, controllers};
+use crate::{AppState, handlers};
 
 /// Cria o roteador do domínio de organizadores.
 ///
@@ -28,14 +28,14 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route(
             "/organizers/options",
-            get(controllers::organizers::get_options),
+            get(handlers::organizers::get_options),
         )
         .route(
             "/organizers/structures",
-            get(controllers::organizers::get_structures),
+            get(handlers::organizers::get_structures),
         )
         .route(
             "/organizers/competitions/{id}/structure",
-            get(controllers::organizers::get_structure_by_year),
+            get(handlers::organizers::get_structure_by_year),
         )
 }

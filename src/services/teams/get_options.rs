@@ -48,7 +48,7 @@ pub async fn get_options(
     institution_ids: Option<Vec<i32>>,
 ) -> AppResult<Vec<OptionItem>> {
     let options = repo
-        .find_options_by_competitions_and_instructions(competition_ids, institution_ids)
+        .find_options_by_competitions_and_institutions(competition_ids, institution_ids)
         .await?
         .into_iter()
         .map(OptionItem::from)
@@ -69,7 +69,7 @@ mod tests {
     #[tokio::test]
     async fn get_options_maps_repository_rows() {
         let mut repo = MockTeamRepository::new();
-        repo.expect_find_options_by_competitions_and_instructions()
+        repo.expect_find_options_by_competitions_and_institutions()
             .with(
                 mockall::predicate::eq(Some(vec![10])),
                 mockall::predicate::eq(Some(vec![5])),
@@ -93,7 +93,7 @@ mod tests {
     #[tokio::test]
     async fn get_options_returns_empty_when_repository_returns_empty() {
         let mut repo = MockTeamRepository::new();
-        repo.expect_find_options_by_competitions_and_instructions()
+        repo.expect_find_options_by_competitions_and_institutions()
             .with(mockall::predicate::eq(None), mockall::predicate::eq(None))
             .returning(|_, _| Ok(vec![]));
 
@@ -105,7 +105,7 @@ mod tests {
     #[tokio::test]
     async fn get_options_propagates_repository_error() {
         let mut repo = MockTeamRepository::new();
-        repo.expect_find_options_by_competitions_and_instructions()
+        repo.expect_find_options_by_competitions_and_institutions()
             .with(
                 mockall::predicate::eq(Some(vec![10])),
                 mockall::predicate::eq(Some(vec![5])),
